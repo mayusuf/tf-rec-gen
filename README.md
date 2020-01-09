@@ -9,6 +9,6 @@ It is only applicable for a single bounding box in an image. This script is appr
 This script read json and respective image file from directory. it can read multiple bouding box from a single image.
 
 
-## Authors
+## Author
 
 * **ABU YUSUF** - [mayusuf](https://github.com/mayusuf)
