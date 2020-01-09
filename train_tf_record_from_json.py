@@ -1,11 +1,10 @@
 #===========================================================================================
 #
-#title           :data_parse.py
-#description     :This script read json file from a directory.
-#author		 	 :Abu Yusuf and FusionSystems
+#title           : TF record Generator. 
+#description     :This script read json and respective image file from directory. it can read multiple bouding box from a single image.
+#author		 	 :Abu Yusuf
 #date            :20190809
-#version         :1.0    
-#usage		     :python data_parse.py
+#version         :1.1    
 #notes           :Install minimum python 3.6, Python Image Library.
 #
 #============================================================================================
@@ -23,8 +22,8 @@ from PIL import Image  # Python image library
 
 os.chdir(os.getcwd())
 
-lableFolder="DaimlerDatasetLabel"
-imageFolder="DaimlerDatasetImage"
+lableFolder="label"
+imageFolder="image"
 recordFolder="tfRecord/train.record"
 valRecordFolder="tfRecord/val.record"
 
@@ -39,13 +38,7 @@ def create_tf_example(example):
     width = example["width"] # Image width
     filename = example["filename"].encode('utf8') # Filename of the image. Empty if image is not from file
     
-    global noWidth
-    if(width > 0):
-        noWidth += 1        
-        
     img_path = imageFolder+os.sep+example["filename"]
-    # imgByteArr = io.BytesIO()
-    # encoded_image_data =  imgByteArr.getvalue()  # Encoded image bytes
     
     with tf.gfile.GFile(img_path, 'rb') as fid:
         encoded_image_data = fid.read()
@@ -70,12 +63,7 @@ def create_tf_example(example):
         
         if(x_y_coordinates["identity"] == "cyclist"):
           classes.append(1) # List of integer class id of bounding box (1 per box)
-        
-        
-        # else if(x_y_coordinates["identity"] == "motorcyclist"):
-            # classes.append(2) # List of integer class id of bounding box (1 per box)
-        # else if(x_y_coordinates["identity"] == "tricyclist"):
-            # classes.append(3) # List of integer class id of bounding box (1 per box)
+              
         # else if(x_y_coordinates["identity"] == "pedestrian"):
             # classes.append(4) # List of integer class id of bounding box (1 per box)
         # else if(x_y_coordinates["identity"] == "wheelchairuser"):
@@ -83,12 +71,7 @@ def create_tf_example(example):
         # else if(x_y_coordinates["identity"] == "mopedrider"):
             # classes.append(6) # List of integer class id of bounding box (1 per box)
         
-    print(xmins)
-    print(xmaxs)
-    print(ymins)
-    print(ymaxs)
-    print(classes_text)
-    print(classes)
+   
     
     
     tf_example = tf.train.Example(features=tf.train.Features(feature={
@@ -105,14 +88,14 @@ def create_tf_example(example):
         'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
         'image/object/class/label': dataset_util.int64_list_feature(classes),
     }))
+	
     return tf_example
 
 
-noWidth = 0
    
 def main(_):
     
-    #print(FLAGS.output_path)
+    
     writer = tf.python_io.TFRecordWriter(FLAGS.output_path)
     
        
@@ -122,25 +105,15 @@ def main(_):
 
     #print(jsonFiles)
 
-    number=0
-    
-    hasLevel = 0
-    #hasSecLevel = 0
-   
-    
     # Read directory contains json files one by one
     for file in jsonFiles:
         
-        #if number == 20:
-            #break    # break here
-        #print(file)
-        
+              
         # Read string of a json file
         with open(lableFolder+os.sep+file) as jsonString: 
             
             json_data = json.load(jsonString)
-            #print(json_data['imagename'])
-            
+                        
             imInfo = Image.open(imageFolder+os.sep+json_data["imagename"])
             w, h = imInfo.size
            
@@ -158,34 +131,7 @@ def main(_):
                 "bbox":json_data["children"]
             }
             
-            # if(w>0):
-                # hasLevel +=1
-                
-            #checking is there any first level children/ bounding boxes empty
             
-            # if(len(json_data["children"])== 0):
-                # hasLevel +=1
-                    
-            #print(example["bbox"])
-            
-            # checking is there any second level children/ bounding boxes
-            # for bb_info in example["bbox"]:
-                # if(len(bb_info["children"])>0):
-                    # hasSecLevel +=1
-                   
-            #print("==================") 
-            #if(number<150):
-            
-            # tf_example = create_tf_example(example)
-            # writer.write(tf_example.SerializeToString())
-            
-            # else:
-                # tf_example = create_tf_example(example)
-                # writer1.write(tf_example.SerializeToString())
-                
-            #number = number + 1
-            
-            #for example in examples:
             tf_example = create_tf_example(example)
             writer.write(tf_example.SerializeToString())
             
